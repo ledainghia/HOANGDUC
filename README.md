@@ -1,4 +1,5 @@
 IoT123456789
+
 iot102assign@gmail.com
 
 Tài khoản mail, blynk, firebase
@@ -13,11 +14,17 @@ FIREBASE là database -> vô REALTIME DB mà xem
 
 Sài rất nhiều thư viện :))) Cài ĐỦ thư viện nhá
 KEYPAD : https://playground.arduino.cc/Code/Keypad/
+
 ServoESP32 https://github.com/RoboticsBrno/ServoESP32/
+
 LiquidCrystal_I2C https://github.com/johnrickman/LiquidCrystal_I2C
+
 Firebase ESP32 https://github.com/mobizt/Firebase-ESP32
+
 NTPClient https://github.com/arduino-libraries/NTPClient
+
 Blynk https://blynk.io/
+
 FingerPrint https://github.com/AsifKhan991/Adafruit-Fingerprint-Sensor-Library/tree/template_transfer_feature/examples/template_transfer
 
 
