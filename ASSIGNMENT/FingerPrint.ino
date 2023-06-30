@@ -15,6 +15,12 @@ uint8_t getFingerprintEnroll() {
     in = false;
   }
   if (id != 0) in = true;
+  if(getFingerprintID()>0&&digitalRead(touchSen)){
+    println("YOUR FINGER EXISTS, Please try again");
+    printLCD("YourFingerExists", "Please try again");
+    delay(2000);
+    return -1;
+  }
   int p = -1;
 
   print("Waiting for valid finger to enroll as #");

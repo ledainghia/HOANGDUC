@@ -317,7 +317,7 @@ void checkPassFromKeypad(char key) {
         if (wrongPassCount == 3) {
 
           printLCD("KEYPAD LOCK", "OPEN AFTER 5S");
-          saveLogToFirebase("THE KEYPAD LOCK BECAUE USER INPUT WRONG 3 TIME");
+          saveLogToFirebase("THE KEYPAD LOCK BECAUSE USER INPUT WRONG 3 TIME");
           wrongPassCount = 1;
           keyPad = "";
           delay(5000);
