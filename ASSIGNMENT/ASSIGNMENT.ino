@@ -48,7 +48,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 25200, 3600);
 
 // Thông tin kết nối WiFi
-const char* ssid = "Chalsprovjp";
+const char* ssid = "S6060619";
 const char* pass = "khongchopass";
 
 //FIREBASE INFORMATION
@@ -61,6 +61,7 @@ int btnAddFinger = 0, id = 0;
 String terminalRead = "";
 int wrongPassCount = 1;
 int mode = 0;
+bool changePass = false;
 String password = "";
 String keyPad = "";
 bool keyMode = false;
@@ -146,8 +147,12 @@ void setup() {
   if (finger.verifyPassword()) {
     println("Found fingerprint sensor!");
   } else {
+    printLCD("RUN FINGER", "FAIL, PLS RESET");
     println("Did not find fingerprint sensor :(");
     println("Check sensor then reset :(");
+    while (true) {
+      delay(1);
+    }
   }
   Serial.print("FIREBASE ");
   getPasswordFromFirebase();
@@ -261,37 +266,40 @@ void updatePassword() {
   const unsigned long timeoutDuration = 30000;  // 30 seconds
 
   while (keyP != '#') {
+
     keyP = getKey2();
 
     if (keyP != 'N') {
-      if (keyP == 'A') {
-        newPass = newPass.substring(0, newPass.length() - 1);
-      } else if (keyP == 'B') {
-        newPass = "";
-      } else if (keyP == '#') {
-        password = newPass;
-        newPass = "";
-        keyP = NULL;
-        Serial.println(password.toInt());
-      
-        savePassToFirebase(password);
+      if (changePass == true) {
+        if (keyP == 'A') {
+          newPass = newPass.substring(0, newPass.length() - 1);
+        } else if (keyP == 'B') {
+          newPass = "";
+        } else if (keyP == '#') {
+          password = newPass;
+          newPass = "";
+          keyP = NULL;
+          Serial.println(password.toInt());
 
-        saveLogToFirebase("Password was changed to: " +password );
-        printLCD("CHANGE SUCCESS", "");
-        return;
-      } else {
-        newPass += keyP;
+          savePassToFirebase(password);
+
+          saveLogToFirebase("Password was changed to: " + password);
+          printLCD("CHANGE SUCCESS", "");
+          return;
+        } else {
+          newPass += keyP;
+        }
+        printLCD("INPUT NEW PASS", newPass);
       }
-      printLCD("INPUT NEW PASS", newPass);
-    }
 
-    // Kiểm tra thời gian đã trôi qua
-    unsigned long currentTime = millis();
-    if (currentTime - startTime >= timeoutDuration) {
-      printLCD("TIMEOUT", "");
-      delay(2000);
-      printLCDDefault();
-      return;
+      // Kiểm tra thời gian đã trôi qua
+      unsigned long currentTime = millis();
+      if (currentTime - startTime >= timeoutDuration) {
+        printLCD("TIMEOUT", "");
+        delay(2000);
+        printLCDDefault();
+        return;
+      }
     }
   }
 }
@@ -325,7 +333,7 @@ void checkPassFromKeypad(char key) {
           mode = 0;
         } else {
           printLCD("WRONG PASS", "WRONG " + String(wrongPassCount));
-          saveLogToFirebase("User enters wrong password for "+ String(wrongPassCount) +  " time");
+          saveLogToFirebase("User enters wrong password for " + String(wrongPassCount) + " time");
           keyPad = "";
           wrongPassCount++;
           delay(2000);
@@ -346,6 +354,55 @@ void checkPassFromKeypad(char key) {
   }
 }
 
+void checkPassFromKeypadUpdate(char key) {
+
+  if (key == '#') {
+    if (mode == 1) {
+      int index = keyPad.indexOf(password);
+      if (index >= 0) {
+        printLCD("Change Pass", "");
+
+        delay(1000);
+
+        printLCDDefault();
+        keyPad = "";
+        wrongPassCount = 1;
+        mode = 0;
+        changePass = true;
+      } else {
+        if (wrongPassCount == 3) {
+
+          printLCD("KEYPAD LOCK", "OPEN AFTER 5S");
+          saveLogToFirebase("THE KEYPAD LOCK BECAUSE USER INPUT WRONG 3 TIME");
+          wrongPassCount = 1;
+          keyPad = "";
+          delay(5000);
+          printLCDDefault();
+          mode = 0;
+        } else {
+          printLCD("WRONG PASS", "WRONG " + String(wrongPassCount));
+          saveLogToFirebase("User enters wrong password for " + String(wrongPassCount) + " time");
+          keyPad = "";
+          wrongPassCount++;
+          delay(2000);
+          printLCDDefault();
+          mode = 0;
+        }
+        changePass = false;
+      }
+    }
+  } else if (key == 'D') {
+    printLCDDefault();
+    keyMode = false;
+    keyPad = "";
+    mode = 0;
+  } else {
+    keyPad += key;
+    printLCD("INPUT OLD PASSWORD", keyPad);
+    mode = 1;
+  }
+}
+
 void addNewFingerprint() {
   while (getFingerprintEnroll() > 0 && !ok1)
     ;
@@ -354,7 +411,7 @@ void addNewFingerprint() {
 
 void event() {
   if (btnAddFinger == 1 && !ok1) addNewFingerprint();
-  else if ( !ok5 && digitalRead(touchSen)) checkFinger();
+  else if (!ok5 && digitalRead(touchSen)) checkFinger();
   else {
     currentMillis = millis();
 
